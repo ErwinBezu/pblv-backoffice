@@ -148,4 +148,5 @@ const dp = {
   },
 };
 
+export const dataProvider = dp;
 export default dp;

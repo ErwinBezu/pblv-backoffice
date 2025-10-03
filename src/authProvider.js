@@ -1,41 +1,63 @@
-import { apiJson } from "./auth/apiClient";
 import {
-  clearTokens,
   saveTokens,
-  identityFromJwt,
+  clearTokens,
   getTokens,
+  identityFromJwt,
 } from "./auth/tokens";
+import { apiJson } from "./auth/apiClient";
 
-const authProvider = {
-  async login({ username, password }) {
-    const data = await apiJson("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ mail: username, password }),
-    }); // :contentReference[oaicite:9]{index=9}
-    saveTokens(data);
-  },
-  async logout() {
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+
+export const authProvider = {
+  login: async ({ username, password }) => {
     try {
-      await apiJson("/api/auth/logout", { method: "POST" });
+      const response = await apiJson("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      });
+
+      saveTokens(response);
+      return Promise.resolve();
     } catch (error) {
-      console.log(error);
+      throw new Error(error?.message || "Identifiants incorrects");
     }
-    clearTokens();
-  }, // :contentReference[oaicite:10]{index=10}
-  async checkAuth() {
-    return getTokens() ? Promise.resolve() : Promise.reject();
   },
-  async checkError(e) {
-    const s = e?.status || 0;
-    if (s === 401 || s === 403) return Promise.reject();
+
+  logout: () => {
+    clearTokens();
     return Promise.resolve();
   },
-  async getIdentity() {
-    return identityFromJwt();
+
+  checkAuth: () => {
+    const tokens = getTokens();
+    return tokens?.accessToken
+      ? Promise.resolve()
+      : Promise.reject({ message: "Non authentifié" });
   },
-  async getPermissions() {
-    const i = identityFromJwt();
-    return i.roles || [];
+
+  checkError: (error) => {
+    const status = error.status;
+    if (status === 401 || status === 403) {
+      clearTokens();
+      return Promise.reject();
+    }
+    return Promise.resolve();
+  },
+
+  getIdentity: () => {
+    try {
+      return Promise.resolve(identityFromJwt());
+    } catch (error) {
+      return Promise.reject();
+    }
+  },
+
+  getPermissions: () => {
+    try {
+      const identity = identityFromJwt();
+      return Promise.resolve(identity.roles || []);
+    } catch (error) {
+      return Promise.resolve([]);
+    }
   },
 };
-export default authProvider;
