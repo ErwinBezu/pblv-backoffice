@@ -1,69 +1,72 @@
-const STORAGE_KEY = "auth.tokens.v1";
+const TOKEN_KEY = "auth_tokens";
 
-export function saveTokens(input) {
-  const dto = input && input.data ? input.data : input || {};
-  const accessToken = dto.accessToken || dto.token;
-  if (!accessToken) throw new Error("No access token in response");
-  const now = Math.floor(Date.now() / 1000);
-  let exp;
-  const decoded = decodeJwt(accessToken);
-  if (decoded && decoded.exp) exp = Number(decoded.exp);
-  if (!exp && dto.expiresAt) {
-    let v =
-      typeof dto.expiresAt === "string"
-        ? Date.parse(dto.expiresAt) / 1000
-        : Number(dto.expiresAt);
-    if (!isNaN(v)) exp = v > 1e10 ? Math.floor(v / 1000) : v;
+export const saveTokens = (data) => {
+  // Gérer le format ApiResponse wrappé ou direct
+  const actualData = data?.data || data;
+
+  const token = actualData?.token;
+  const tokenType = actualData?.tokenType || "Bearer";
+  const expiresAt = actualData?.expiresAt;
+
+  if (!token) {
+    throw new Error("Token manquant dans la réponse");
   }
-  if (!exp && dto.expiresIn) exp = now + Number(dto.expiresIn);
-  const record = {
-    accessToken,
-    refreshToken: dto.refreshToken || null,
-    exp: exp || now + 3600,
+
+  // Votre backend retourne juste "token", pas "accessToken"
+  // On le stocke sous "accessToken" pour compatibilité avec apiClient
+  const tokens = {
+    accessToken: token,
+    tokenType: tokenType,
+    expiresAt: expiresAt || Date.now() + 24 * 60 * 60 * 1000, // 24h par défaut
+    refreshToken: actualData?.refreshToken || null,
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
-  return record;
-}
-export function getTokens() {
+
+  localStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
+};
+
+export const getTokens = () => {
+  const stored = localStorage.getItem(TOKEN_KEY);
+  if (!stored) return null;
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return JSON.parse(stored);
   } catch {
     return null;
   }
-}
-export function clearTokens() {
-  localStorage.removeItem(STORAGE_KEY);
-}
-export function isExpired(leeway = 30) {
-  const t = getTokens();
-  if (!t) return true;
-  const now = Math.floor(Date.now() / 1000);
-  return t.exp <= now + leeway;
-}
-export function decodeJwt(token) {
+};
+
+export const clearTokens = () => {
+  localStorage.removeItem(TOKEN_KEY);
+};
+
+export const isExpired = () => {
+  const tokens = getTokens();
+  if (!tokens?.expiresAt) return false;
+
+  // Considérer comme expiré si moins de 5 minutes restantes
+  return Date.now() >= tokens.expiresAt - 5 * 60 * 1000;
+};
+
+export const identityFromJwt = () => {
+  const tokens = getTokens();
+  if (!tokens?.accessToken) return null;
+
   try {
-    if (!token) return null;
-    const p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(decodeURIComponent(escape(atob(p))));
-  } catch {
+    const payload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
+
+    return {
+      id: payload.userId,
+      fullName: `${payload.firstName || ""} ${payload.lastName || ""}`.trim(),
+      email: payload.email,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      roles: payload.role ? [payload.role] : [],
+      role: payload.role,
+      permissions: payload.permissions || {},
+      communityId: payload.communityId || null,
+    };
+  } catch (error) {
+    console.error("Erreur lors du décodage du JWT:", error);
     return null;
   }
-}
-export function identityFromJwt() {
-  const d = decodeJwt(getTokens()?.accessToken) || {};
-  const id = d.sub || d.id || "me";
-  const fullName =
-    d.name ||
-    [d.given_name, d.family_name].filter(Boolean).join(" ") ||
-    d.preferred_username ||
-    d.email ||
-    "Utilisateur";
-  return {
-    id,
-    fullName,
-    email: d.email,
-    avatar: d.picture,
-    roles: d.roles || d.authorities || [],
-  };
-}
+};

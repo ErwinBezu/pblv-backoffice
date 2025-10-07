@@ -1,9 +1,12 @@
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import * as React from 'react'
 import { useLogin, Notification } from 'react-admin'
-import { Card, CardContent, Button, Typography, TextField } from '@mui/material'
+import { Card, CardContent, Button, Typography, TextField, Divider } from '@mui/material'
 import { apiJson } from './auth/apiClient'
 
-export default function LoginPage() {
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+
+function LoginForm() {
   const login = useLogin()
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState(null)
@@ -18,7 +21,9 @@ export default function LoginPage() {
       await login({ username: email, password })
     } catch (err) {
       setError(err?.message || 'Échec de connexion')
-    } finally { setLoading(false) }
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   const handleForgot = async () => {
@@ -32,20 +37,31 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogle = async () => {
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true)
+    setError(null)
     try {
-      const url = await apiJson('/api/auth/google/login', { method: 'GET' })
-      window.location.href = typeof url === 'string' ? url : (url && url.data) || '/'
-    } catch {
-      alert("Flux Google non configuré côté front : redirige via /google/login ou poste un id_token sur /google/token.")
+      // Envoie l'ID Token à votre backend
+      await login({ 
+        googleToken: credentialResponse.credential 
+      })
+    } catch (err) {
+      setError(err?.message || 'Erreur lors de la connexion Google')
+    } finally {
+      setLoading(false)
     }
   }
 
+  const handleGoogleError = () => {
+    setError('Erreur lors de la connexion Google')
+  }
+
   return (
-    <div style={{ display:'grid', placeItems:'center', minHeight:'100dvh' }}>
+    <div style={{ display:'grid', placeItems:'center', minHeight:'100dvh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <Card style={{ width: 420 }}>
         <CardContent>
-          <Typography variant="h5" gutterBottom>Connexion</Typography>
+          <Typography variant="h5" gutterBottom align="center">Connexion</Typography>
+          
           <form onSubmit={handleSubmit}>
             <TextField
               label="E-mail"
@@ -65,23 +81,58 @@ export default function LoginPage() {
               margin="dense"
               required
             />
-            <Button type="submit" variant="contained" fullWidth style={{ marginTop: 16 }} disabled={loading}>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              fullWidth 
+              style={{ marginTop: 16 }} 
+              disabled={loading}
+            >
               {loading ? 'Connexion...' : 'Se connecter'}
             </Button>
           </form>
 
-          <Button onClick={handleGoogle} variant="outlined" fullWidth style={{ marginTop: 12 }}>
-            Continuer avec Google
-          </Button>
+          <Divider style={{ margin: '24px 0' }}>
+            <Typography variant="body2" color="text.secondary">OU</Typography>
+          </Divider>
 
-          <Button onClick={handleForgot} size="small" style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              // useOneTap
+              theme="outline"
+              size="large"
+              text="continue_with"
+              shape="rectangular"
+              width="360"
+            />
+          </div>
+
+          <Button onClick={handleForgot} size="small" fullWidth>
             Mot de passe oublié ?
           </Button>
 
-          {error && <Typography color="error" style={{ marginTop: 8 }}>{error}</Typography>}
+          {error && (
+            <Typography color="error" style={{ marginTop: 12, textAlign: 'center' }}>
+              {error}
+            </Typography>
+          )}
         </CardContent>
       </Card>
       <Notification />
     </div>
+  )
+}
+
+export default function LoginPage() {
+  if (!GOOGLE_CLIENT_ID) {
+    console.log('VITE_GOOGLE_CLIENT_ID non défini dans .env')
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ''}>
+      <LoginForm />
+    </GoogleOAuthProvider>
   )
 }
