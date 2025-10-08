@@ -29,21 +29,17 @@ export default function CalendarBoard() {
     try {
       setLoading(true)
 
-      // charge les events
       const { data: evs } = await dp.getList('calendars', {
         pagination: { page: 1, perPage: 1000 },
       })
 
-      // charge les communautés (pour libellés + filtre)
       const { data: comms } = await dp.getList('communities', {
         pagination: { page: 1, perPage: 1000 },
       })
       setCommunities(comms)
 
-      // dict id -> name
       const commMap = new Map(comms.map(c => [String(c.id), c.name]))
 
-      // tolérant: community peut être "communityId", "community", "community.id", "communityName"
       const mapped = (evs || []).map(e => {
         const cid = e.communityId ?? e.community?.id ?? e.community ?? null
         const cname = e.communityName || e.community?.name || (cid != null ? commMap.get(String(cid)) : '')
@@ -65,19 +61,15 @@ export default function CalendarBoard() {
 
   React.useEffect(() => { loadData() }, [loadData])
 
-  // (Re)monte le calendrier à chaque changement important
   React.useEffect(() => {
     if (!calRef.current) return
 
-    // détruire l’instance précédente
     if (cal.current) { cal.current.destroy(); cal.current = null }
 
-    // palette couleurs par communauté
     const colorMap = new Map()
     const palette = ['#1976d2','#2e7d32','#ed6c02','#9c27b0','#d32f2f','#00796b','#5d4037','#455a64']
     communities.forEach((c, i) => colorMap.set(String(c.id), palette[i % palette.length]))
 
-    // filtrage local par communauté
     const filtered = filterCommunity === 'all'
       ? events
       : events.filter(e => String(e.extendedProps.communityId) === String(filterCommunity))
@@ -122,7 +114,6 @@ export default function CalendarBoard() {
       },
 
       eventClick: (info) => {
-        // ouvre l’édition RA de l’événement
         window.location.hash = `#/calendars/${info.event.id}`
       },
     })
@@ -162,7 +153,6 @@ export default function CalendarBoard() {
         </CardContent>
       </Card>
 
-      {/* Conteneur du calendrier */}
       <div ref={calRef} />
     </Box>
   )

@@ -3,7 +3,6 @@ import { Title, useNotify } from 'react-admin'
 import { getSecurityAnalytics } from '../api/admin'
 import { Box, Grid, Card, CardContent, Typography, LinearProgress, List, ListItem, ListItemText, Divider } from '@mui/material'
 
-// mini sparkline
 const Sparkline = ({ data = [] }) => {
   const W=220, H=48, P=4
   if (!data.length) return <Box sx={{height:H}} />
@@ -26,7 +25,7 @@ export default function SecurityDashboard() {
   }, [notify])
 
   const d = state.data || {}
-  const health = d.systemHealth || {} // SecurityHealthStatus
+  const health = d.systemHealth || {}
   const trends = d.securityTrends || {}
   const trendVals = Object.values(trends)
 

@@ -24,7 +24,7 @@ export const CollectCenterCreate = () => (
   <Create transform={(d) => trim({
     name: d.name,
     address: d.address,
-    website: normalizeUrlOrEmpty(d.website), // ⬅️
+    website: normalizeUrlOrEmpty(d.website),
     communityId: d.communityId,
     garbageTypeIds: d.garbageTypeIds
   })}>
@@ -45,7 +45,7 @@ export const CollectCenterCreate = () => (
 export const CollectCenterEdit = () => (
   <Edit transform={(d) => trim({
     ...d,
-    website: normalizeUrlOrEmpty(d.website) // ⬅️
+    website: normalizeUrlOrEmpty(d.website)
   })}>
     <SimpleForm>
       <TextInput source="name" required />

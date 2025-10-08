@@ -7,7 +7,6 @@ import {
 import { Download } from '@mui/icons-material'
 import QRCode from 'react-qr-code'
 
-// LIST : colle à BinDTOOut (community & garbageType en texte)
 export const BinList = () => (
   <List>
     <Datagrid rowClick="show">
@@ -20,7 +19,6 @@ export const BinList = () => (
   </List>
 )
 
-// CREATE / EDIT : on envoie communityId + garbageTypeId + coords (strings)
 const QRCodeDisplay = ({ source }) => {
   const record = useRecordContext()
   const qrRef = React.useRef()
@@ -78,7 +76,6 @@ const QRCodeDisplay = ({ source }) => {
   )
 }
 
-// SHOW : vue détaillée avec QR code
 export const BinShow = () => (
   <Show>
     <SimpleShowLayout>
@@ -93,10 +90,8 @@ export const BinShow = () => (
   </Show>
 )
 
-// helpers
 const trimEmpty = (obj) => Object.fromEntries(Object.entries(obj).filter(([,v]) => v !== '' && v != null))
 
-// CREATE / EDIT
 export const BinCreate = () => (
   <Create transform={(d) => trimEmpty({
     communityId: d.communityId,
@@ -110,7 +105,6 @@ export const BinCreate = () => (
         <SelectInput optionText="name" />
       </ReferenceInput>
       
-      {/* AJOUTER CE CHAMP */}
       <ReferenceInput source="binTypeId" reference="bin-types" label="Type de conteneur" required>
         <SelectInput optionText="type" />
       </ReferenceInput>

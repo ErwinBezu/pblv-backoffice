@@ -8,9 +8,9 @@ const PATHS = {
   communities: "/api/communities",
   "collect-centers": "/api/collect-center",
 
-  bins: "/api/bins", // BinController
-  "bin-types": "/api/bin-type", // BinTypeController
-  calendars: "/api/calendars", // CalendarController
+  bins: "/api/bins",
+  "bin-types": "/api/bin-type",
+  calendars: "/api/calendars",
 
   roles: "/api/roles",
   "garbage-types": "/api/garbage-type",
@@ -37,7 +37,6 @@ const readJson = async (res) => {
     err.body = json || text;
     throw err;
   }
-  // unifier ApiResponse vs brut
   if (
     json &&
     typeof json === "object" &&
@@ -51,14 +50,12 @@ const readJson = async (res) => {
 const ensureId = (rec) => {
   if (!rec) return rec;
   if (rec.id) return rec;
-  // tente de normaliser si backend renvoie "uuid" ou "_id"
   if (rec.uuid) return { ...rec, id: rec.uuid };
   if (rec._id) return { ...rec, id: rec._id };
   return rec;
 };
 
 const dp = {
-  // NOTE: beaucoup d'endpoints ne paginent pas -> on pagine côté client
   async getList(resource, { pagination, sort, filter }) {
     const url = `${API}${pathFor(resource)}`;
     const res = await apiFetch(url, { method: "GET" });
@@ -66,11 +63,9 @@ const dp = {
     const list = Array.isArray(data)
       ? data
       : data?.items || data?.results || data || [];
-    // tri client si demandé
     const withId = list.map(ensureId);
     const { page = 1, perPage = 25 } = pagination || {};
     const sliced = withId.slice((page - 1) * perPage, page * perPage);
-    // simple tri client
     if (sort?.field) {
       const order = (sort.order || "ASC").toUpperCase() === "DESC" ? -1 : 1;
       sliced.sort(
@@ -89,7 +84,6 @@ const dp = {
   },
 
   async getMany(resource, { ids }) {
-    // fallback: charge tout puis filtre (si pas d'endpoint batch)
     const { data } = await dp.getList(resource, {
       pagination: { page: 1, perPage: 10000 },
     });
@@ -98,7 +92,6 @@ const dp = {
   },
 
   async getManyReference(resource, params) {
-    // fallback: filtre client si target présent dans records
     const { target, id } = params;
     const list = await dp.getList(resource, params);
     return {
@@ -126,7 +119,6 @@ const dp = {
   },
 
   async updateMany(resource, { ids, data }) {
-    // fallback: boucle (si pas d'endpoint bulk)
     const results = await Promise.all(
       ids.map((id) => dp.update(resource, { id, data }))
     );

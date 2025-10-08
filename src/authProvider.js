@@ -10,15 +10,12 @@ const authProvider = {
   async login({ username, password, googleToken }) {
     let data;
 
-    // Connexion avec Google
     if (googleToken) {
       data = await apiJson("/api/auth/google/token", {
         method: "POST",
         body: JSON.stringify({ idToken: googleToken }),
       });
-    }
-    // Connexion classique email/password
-    else {
+    } else {
       data = await apiJson("/api/auth/login", {
         method: "POST",
         body: JSON.stringify({ mail: username, password }),

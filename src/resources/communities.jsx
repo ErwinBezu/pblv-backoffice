@@ -22,7 +22,7 @@ export const CommunityCreate = () => (
     name: d.name,
     phone: d.phone,
     mail: d.mail,
-    postalCode: toInt(d.postalCode),   // si ton DTO attend un nombre
+    postalCode: toInt(d.postalCode),
     website: normalizeUrlOrEmpty(d.website)
   })}>
     <SimpleForm>

@@ -2,7 +2,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'
 import * as React from 'react'
 import { useLogin, Notification } from 'react-admin'
 import { Card, CardContent, Button, Typography, TextField, Divider } from '@mui/material'
-import { apiJson } from './auth/apiClient'
+import { apiJson } from '../auth/apiClient'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID
 

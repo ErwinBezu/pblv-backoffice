@@ -12,32 +12,37 @@ import { CalendarList, CalendarCreate, CalendarEdit } from './resources/calendar
 import { UserList } from './resources/users'
 import { UserAddressList, UserAddressCreate, UserAddressEdit } from './resources/userAddresses'
 import { UserPreferenceList, UserPreferenceCreate, UserPreferenceEdit } from './resources/userPreferences'
-import LoginPage from './LoginPage'
+import { ReportList, ReportCreate, ReportEdit, ReportShow } from './resources/reports'
 
-
+import LoginPage from './pages/LoginPage'
 import SecurityDashboard from './pages/SecurityDashboard'
 import SystemLogs from './pages/SystemLogs'
-import AdminDashboard from './pages/AdminDashboard.jsx'
-import CalendarBoard from './pages/CalendarBoard.jsx'
+import AdminDashboard from './pages/AdminDashboard'
+import CalendarBoard from './pages/CalendarBoard'
+import Profile from './pages/Profile'
 
-
-
+import lightTheme from './theme'
 import MyLayout from './layout/MyLayout'
-
 
 export default function App() {
   return (
-    <Admin dataProvider={dataProvider} authProvider={authProvider} layout={MyLayout} dashboard={AdminDashboard} loginPage={LoginPage}  >
+    <Admin 
+      dataProvider={dataProvider} 
+      authProvider={authProvider} 
+      layout={MyLayout} 
+      dashboard={AdminDashboard} 
+      loginPage={LoginPage} 
+      theme={lightTheme}
+    >
       <Resource name="users" list={UserList} />
       <Resource name="user-addresses" list={UserAddressList} create={UserAddressCreate} edit={UserAddressEdit} />
       <Resource name="user-preferences" list={UserPreferenceList} create={UserPreferenceCreate} edit={UserPreferenceEdit} />
 
-
-      <Resource name="reports" list={ListGuesser} edit={EditGuesser} show={ShowGuesser} />
+      <Resource name="reports" list={ReportList} create={ReportCreate} edit={ReportEdit} show={ReportShow} options={{ label: 'Signalements' }} />
       <Resource name="communities" list={CommunityList} create={CommunityCreate} edit={CommunityEdit} />
       <Resource name="collect-centers" list={CollectCenterList} create={CollectCenterCreate} edit={CollectCenterEdit} />
 
-      <Resource name="bins" list={BinList} create={BinCreate} edit={BinEdit}  show={BinShow} />
+      <Resource name="bins" list={BinList} create={BinCreate} edit={BinEdit} show={BinShow} />
       <Resource name="bin-types" list={ListGuesser} edit={EditGuesser} show={ShowGuesser} />
       <Resource name="calendars" list={CalendarList} create={CalendarCreate} edit={CalendarEdit} />
 
@@ -45,6 +50,7 @@ export default function App() {
       <Resource name="garbage-types" list={GarbageTypeList} create={GarbageTypeCreate} edit={GarbageTypeEdit} />
 
       <CustomRoutes>
+        <Route path="/profile" element={<Profile />} />
         <Route path="/security-dashboard" element={<SecurityDashboard />} />
         <Route path="/system-logs" element={<SystemLogs />} />
         <Route path="/calendar-board" element={<CalendarBoard />} />

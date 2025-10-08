@@ -9,7 +9,6 @@ const trim = (o) => Object.fromEntries(Object.entries(o).filter(([,v]) => v !== 
 const toIsoInstant = (v) => { if (!v) return undefined; const d = v instanceof Date ? v : new Date(v); return d.toISOString() }
 
 export const CalendarList = () => {
-  // On précharge toutes les communautés une fois
   const { data: comms = [], isLoading } = useGetList('communities', {
     pagination: { page: 1, perPage: 1000 },
   })
@@ -24,7 +23,6 @@ export const CalendarList = () => {
         <TextField source="id" />
         <DateField source="dateEvent" showTime label="Date" />
         <TextField source="description" />
-        {/* 🔥 affiche le nom; sinon fallback sur l’ID pendant le chargement */}
         <FunctionField
           label="Communauté"
           render={rec => isLoading ? rec.communityId : (dict[String(rec.communityId)] || rec.communityId)}
